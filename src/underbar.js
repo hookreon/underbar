@@ -105,9 +105,19 @@
     return uniq;
     */
 
-    return _.filter(array, function(val, index, array) {
+    /*return _.filter(array, function(val, index, array) {
       return _.indexOf(array, val) === index;
-    });
+    }); */
+
+    var obj = new Object();
+    var unique = [];
+    for(var i = 0; i < array.length; i++) {
+      obj[array[i]] = array[i];
+    }
+    for(var key in obj) {
+      unique.push(obj[key]);
+    }
+    return unique;
   };
 
 
@@ -305,6 +315,18 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    //console.log(arguments.length);
+    var alreadyComputed = {};
+    var args = Array.prototype.slice.call(arguments, 1);
+
+    return function() {
+      if(alreadyComputed[arguments[0]] === undefined) {
+        alreadyComputed[arguments[0]] = func.apply(this, arguments);
+      }
+      return alreadyComputed[arguments[0]];
+    };
+
+
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -314,6 +336,10 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments,2);
+    setInterval(function() {
+      func.apply(this,args);
+    }, wait);
   };
 
 
@@ -328,6 +354,18 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+     var arr = array.slice();
+     var curr = arr.length - 1;
+     var rand = 0;
+     var t = 0;
+     while(curr >= 0) {
+       rand = Math.floor(Math.random() * array.length);
+       t = arr[rand];
+       arr[rand] = arr[curr];
+       arr[curr] = t;
+       curr -= 1;
+     }
+     return arr;
   };
 
 
@@ -342,6 +380,16 @@
   // Calls the method named by functionOrKey on each value in the list.
   // Note: You will need to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
+    return _.map(collection, function(value) {
+      if(typeof functionOrKey === 'function') {
+        console.log('inside if');
+        return functionOrKey.apply(value, args);
+      }
+      else {
+        console.log('inside else');
+        return value.functionOrKey();
+      }
+    });
   };
 
   // Sort the object's values by a criterion produced by an iterator.
