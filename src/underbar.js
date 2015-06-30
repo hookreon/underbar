@@ -382,12 +382,10 @@
   _.invoke = function(collection, functionOrKey, args) {
     return _.map(collection, function(value) {
       if(typeof functionOrKey === 'function') {
-        console.log('inside if');
         return functionOrKey.apply(value, args);
       }
       else {
-        console.log('inside else');
-        return value.functionOrKey();
+        return value[functionOrKey]();
       }
     });
   };
@@ -397,6 +395,20 @@
   // of that string. For example, _.sortBy(people, 'name') should sort
   // an array of people by their name.
   _.sortBy = function(collection, iterator) {
+    var arr = collection;
+    /*_.each(collection, function(value) {
+      arr.push(value[iterator]);
+    });*/
+    //Sort using sort()
+    //console.log(arr);
+    arr.sort(function(a,b) {
+      if (typeof iterator === 'string') {
+        return a[iterator] - b[iterator];
+      }
+      return iterator(a) - iterator(b);
+    });
+
+    return arr;
   };
 
   // Zip together two or more arrays with elements of the same index
@@ -405,6 +417,36 @@
   // Example:
   // _.zip(['a','b','c','d'], [1,2,3]) returns [['a',1], ['b',2], ['c',3], ['d',undefined]]
   _.zip = function() {
+    var args = Array.prototype.slice.call(arguments);
+    _.sortBy(args, function(value) {
+      return -value.length;
+    });
+
+    //console.log(args);
+    var max = args[0].length;
+    _.each(args, function(value) {
+      if(value.length < max) {
+        for(var i = value.length; i<max; i++) {
+          value.push(undefined);
+        }
+      }
+    });
+
+    //console.log(args[2]);
+    var size = args.length;
+    var res = [];
+    var mini = [];
+
+    for(var j=0; j<max; j++) {
+      for(var i = 0; i<size; i++) {
+        mini.push(args[i][j]);
+      }
+      res.push(mini);
+      mini = [];
+    }
+
+    return res;
+
   };
 
   // Takes a multidimensional array and converts it to a one-dimensional array.
@@ -412,16 +454,89 @@
   //
   // Hint: Use Array.isArray to check if something is an array
   _.flatten = function(nestedArray, result) {
+    var arr = [];
+
+    var search = function(something) {
+      if(Array.isArray(something)) {
+        for(var i = 0; i<something.length; i++) {
+          search(something[i]);
+        }
+      }
+      else { arr.push(something); }
+    };
+
+    search(nestedArray);
+    return arr;
   };
 
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
   _.intersection = function() {
+    var argLength = arguments.length;
+    var args = Array.prototype.slice.call(arguments);
+    var flat = _.flatten(args);
+
+    flat.sort(function(a,b) {
+      if(a < b) {return -1;}
+      if(a > b) {return 1;}
+      return 0;
+    });
+
+    //console.log(flat);
+    var count = 0;
+    var res = [];
+    for(var i = 0; i < flat.length; i++) {
+      count = 1;
+      while(flat[i] === flat[i + 1]) {
+        count++;
+        i++;
+        if(count === argLength) {
+          res.push(flat[i]);
+          break;
+        }
+      }
+    }
+    //console.log(res);
+    return res;
+
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
+    /*var arr = Array.prototype.slice.call(arguments);
+    arr = arr.slice(1);
+
+    var res = [];
+    for (var i = 0; i<arr.length; i++) {
+      res.push(_.intersection(array,arr[i]));
+    }
+
+    var intersect = _.flatten(res);
+    console.log(intersect);
+
+    res = [];
+    _.each(array, function(val) {
+      if(_.indexOf(intersect,val) === -1) {
+        res.push(val);
+      }
+    });
+    console.log(intersect);
+    return res;*/
+
+    var arr = Array.prototype.slice.call(arguments);
+    arr = arr.slice(1);
+    var flat = _.flatten(arr);
+
+    var res = [];
+    _.each(array, function(val) {
+      if(_.indexOf(flat,val) === -1) {
+        res.push(val);
+      }
+    });
+    return res;
+
+
   };
 
   // Returns a function, that, when invoked, will only be triggered at most once
@@ -430,5 +545,29 @@
   //
   // Note: This is difficult! It may take a while to implement.
   _.throttle = function(func, wait) {
-  };
+    var called = false;
+    var flip = function() {
+      called = !called;
+    }
+    setTimeout(flip, wait);
+
+    return function() {
+
+      if(!called) {
+        called = !called;
+        return func.apply(this,arguments);
+      }
+    }
+};
+
 }());
+
+
+
+
+
+
+
+
+
+
